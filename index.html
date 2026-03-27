@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="css/chessground.cburnett.css" />
 </head>
 <body>
+  <header class="page-header">
+    <h1 class="page-header__title">Historical Chess</h1>
+  </header>
+
   <main class="page-layout">
     <section class="board-stage">
       <div class="board-container">
@@ -15,11 +19,12 @@
     </section>
 
     <aside class="capture-panel" aria-live="polite">
-      <p class="capture-panel__eyebrow">Captured Ruler</p>
-      <h1 class="capture-panel__title">No captures yet</h1>
-      <p class="capture-panel__subtitle">The defeated ruler will appear here with a short Wikipedia summary.</p>
+      <p class="capture-panel__eyebrow">Defeated Rulers</p>
+      <h1 class="capture-panel__title">Your collection starts empty</h1>
+      <p class="capture-panel__subtitle">Defeat enemy pieces to collect their ruler cards.</p>
+      <div class="capture-panel__collection" aria-label="Collected ruler cards"></div>
       <img class="capture-panel__image" alt="" hidden />
-      <p class="capture-panel__status">Make a capture to load the entry.</p>
+      <p class="capture-panel__status">Defeat a black piece to claim its ruler card.</p>
       <p class="capture-panel__summary" hidden></p>
       <a class="capture-panel__link" href="" target="_blank" rel="noreferrer" hidden>Open Wikipedia</a>
     </aside>

@@ -2,6 +2,7 @@ const elm_board = document.querySelector('.board');
 const capturePanel = {
   title: document.querySelector('.capture-panel__title'),
   subtitle: document.querySelector('.capture-panel__subtitle'),
+  collection: document.querySelector('.capture-panel__collection'),
   image: document.querySelector('.capture-panel__image'),
   status: document.querySelector('.capture-panel__status'),
   summary: document.querySelector('.capture-panel__summary'),
@@ -146,7 +147,9 @@ const pieceCodeToName = {
   k: "king"
 };
 const assignedRulersByPieceType = new Map();
+const collectedRulersByPieceType = new Map();
 let captureRequestId = 0;
+let selectedCollectedPieceType = null;
 
 function toPieceUrl(fileName) {
   return `url("${new URL(`../images/pieces/${fileName}`, import.meta.url).href}")`;
@@ -192,11 +195,16 @@ function updateBoard() {
   });
 }
 
-function resetCapturePanelForLoad(ruler, pieceType) {
+function formatPieceLabel(pieceType) {
   const [, pieceName] = pieceType.split("-");
+  return pieceName;
+}
+
+function resetCapturePanelForLoad(ruler, pieceType) {
+  const pieceName = formatPieceLabel(pieceType);
 
   capturePanel.title.textContent = ruler.displayName;
-  capturePanel.subtitle.textContent = `The defeated ${pieceName} is loading from Wikipedia.`;
+  capturePanel.subtitle.textContent = `Your ${pieceName} card is loading from Wikipedia.`;
   capturePanel.image.src = toPieceSrc(ruler.fileName);
   capturePanel.image.alt = `${ruler.displayName} portrait`;
   capturePanel.image.hidden = false;
@@ -206,22 +214,65 @@ function resetCapturePanelForLoad(ruler, pieceType) {
   capturePanel.link.hidden = true;
 }
 
-async function showCapturedRuler(move) {
-  if (!move.captured) {
+function updateSelectedCard() {
+  const cards = capturePanel.collection.querySelectorAll(".capture-card");
+  cards.forEach((card) => {
+    const isSelected = card.dataset.pieceType === selectedCollectedPieceType;
+
+    card.classList.toggle("is-selected", isSelected);
+    card.setAttribute("aria-pressed", String(isSelected));
+  });
+}
+
+function renderCollectedRulerCard(pieceType, ruler) {
+  const card = document.createElement("button");
+  const pieceName = formatPieceLabel(pieceType);
+
+  card.type = "button";
+  card.className = "capture-card";
+  card.dataset.pieceType = pieceType;
+  card.innerHTML = `
+    <img class="capture-card__image" src="${toPieceSrc(ruler.fileName)}" alt="${ruler.displayName} portrait" />
+    <span class="capture-card__name">${ruler.displayName}</span>
+    <span class="capture-card__piece">${pieceName}</span>
+  `;
+  card.addEventListener("click", () => {
+    showCollectedRuler(pieceType);
+  });
+
+  capturePanel.collection.append(card);
+}
+
+function collectRuler(move) {
+  if (!move.captured || move.color !== "w") {
     return;
   }
 
-  const capturedColor = move.color === "w" ? "black" : "white";
+  const capturedColor = "black";
   const capturedPieceType = `${capturedColor}-${pieceCodeToName[move.captured]}`;
   const ruler = assignedRulersByPieceType.get(capturedPieceType);
+
+  if (!ruler || collectedRulersByPieceType.has(capturedPieceType)) {
+    return;
+  }
+
+  collectedRulersByPieceType.set(capturedPieceType, ruler);
+  renderCollectedRulerCard(capturedPieceType, ruler);
+  showCollectedRuler(capturedPieceType);
+}
+
+async function showCollectedRuler(pieceType) {
+  const ruler = collectedRulersByPieceType.get(pieceType);
 
   if (!ruler) {
     return;
   }
 
+  selectedCollectedPieceType = pieceType;
+  updateSelectedCard();
   captureRequestId += 1;
   const requestId = captureRequestId;
-  resetCapturePanelForLoad(ruler, capturedPieceType);
+  resetCapturePanelForLoad(ruler, pieceType);
 
   try {
     const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(ruler.wikiTitle)}`);
@@ -235,7 +286,7 @@ async function showCapturedRuler(move) {
     }
 
     capturePanel.title.textContent = summary.title || ruler.displayName;
-    capturePanel.subtitle.textContent = summary.description || `Captured ${capturedPieceType.replace("-", " ")}`;
+    capturePanel.subtitle.textContent = summary.description || `Collected ${pieceType.replace("-", " ")}`;
     capturePanel.summary.textContent = summary.extract || "No summary was available for this ruler.";
     capturePanel.summary.hidden = false;
     capturePanel.status.hidden = true;
@@ -246,7 +297,7 @@ async function showCapturedRuler(move) {
       return;
     }
 
-    capturePanel.subtitle.textContent = `Captured ${capturedPieceType.replace("-", " ")}`;
+    capturePanel.subtitle.textContent = `Collected ${pieceType.replace("-", " ")}`;
     capturePanel.summary.textContent = "Wikipedia could not be loaded right now, but the ruler image remains available.";
     capturePanel.summary.hidden = false;
     capturePanel.status.hidden = true;
@@ -269,7 +320,7 @@ function computerMove() {
   if (moves.length > 0) {
     const move = game.move(moves[Math.floor(Math.random() * moves.length)]);
     updateBoard();
-    showCapturedRuler(move);
+    collectRuler(move);
   }
 }
 
@@ -285,7 +336,7 @@ const ground = Chessground(elm_board, {
         const move = game.move({ from: orig, to: dest, promotion: 'q' });
         if (move) {
           updateBoard();
-          showCapturedRuler(move);
+          collectRuler(move);
 
           if (!game.game_over()) {
             setTimeout(computerMove, 500);

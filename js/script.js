@@ -1,3 +1,5 @@
+import {returnPathToPiece} from "./picture-picker";
+
 const elm_board = document.querySelector('.board');
 
 const game = new Chess();
@@ -35,11 +37,16 @@ const ground = Chessground(elm_board, {
       after: (orig, dest) => {
         const move = game.move({ from: orig, to: dest, promotion: 'q' });
         if (move) {
+          const pieceKey = move.color + move.piece; // e.g. "wk", "bk"
+          const piecePath = returnPathToPiece(pieceKey);
+          console.log('Selected image:', piecePath);
+
           ground.set({
             fen: game.fen(),
             turnColor: game.turn() === 'w' ? 'white' : 'black',
             movable: { dests: toDests(game) }
           });
+
           if (!game.game_over()) {
             setTimeout(computerMove, 500);
           }
@@ -49,3 +56,7 @@ const ground = Chessground(elm_board, {
   },
   viewOnly: false
 });
+
+
+
+

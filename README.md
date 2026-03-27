@@ -17,7 +17,7 @@ The game supports basic gameplay between a human player and a computer opponent 
 
 ## Demo
 
-![Chess Game Screenshot](screenshot.jpg)
+![Chess Game Screenshot](screenshot.png)
 
 ---
 

@@ -7,9 +7,23 @@
   <link rel="stylesheet" href="css/chessground.cburnett.css" />
 </head>
 <body>
-  <div class="board-container">
-    <div class="board"></div>
-  </div>
+  <main class="page-layout">
+    <section class="board-stage">
+      <div class="board-container">
+        <div class="board"></div>
+      </div>
+    </section>
+
+    <aside class="capture-panel" aria-live="polite">
+      <p class="capture-panel__eyebrow">Captured Ruler</p>
+      <h1 class="capture-panel__title">No captures yet</h1>
+      <p class="capture-panel__subtitle">The defeated ruler will appear here with a short Wikipedia summary.</p>
+      <img class="capture-panel__image" alt="" hidden />
+      <p class="capture-panel__status">Make a capture to load the entry.</p>
+      <p class="capture-panel__summary" hidden></p>
+      <a class="capture-panel__link" href="" target="_blank" rel="noreferrer" hidden>Open Wikipedia</a>
+    </aside>
+  </main>
 
   <script src="js/chessground.min.js"></script>
   <script src="js/chess.min.js"></script>
